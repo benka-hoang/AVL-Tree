@@ -1,11 +1,13 @@
 #include "AVL.h"
 #include <iostream>
 #include <algorithm>
+#include <cassert>
 
 using namespace std;
 
 Node::Node(const int val)
 {
+	height = 1;
 	value = val;
 	lnode = nullptr;
 	rnode = nullptr;
@@ -16,26 +18,31 @@ AVL::AVL()
 	root = nullptr;
 }
 
-int AVL::height(Node * pNode){
+int AVL::get_height(Node * pNode){
 	if (!pNode) return 0;
-	int l = height(pNode->lnode);
-	int r = height(pNode->rnode);
+	int l = get_height(pNode->lnode);
+	int r = get_height(pNode->rnode);
 	return 1 + max(l, r);
 }
 
-void AVL::add_recur(Node *&pNode, int x)
+void AVL::add_recur(Node *&pnode, int x)
 {
-	if (pNode == nullptr) {
-		pNode = new Node(x);
+	if (pnode == nullptr) {
+		pnode = new Node(x);
 		return;
 	}
-	if (pNode->value == x)
-		return;
-	if (x < pNode->value) {
-		add_recur(pNode->lnode, x);
+	if (x < pnode->value)
+		add_recur(pnode->lnode, x);
+	else
+		add_recur(pnode->rnode, x);
+	if (balance_factor(pnode)) {
+		if (x == 3) {
+			cerr << "Hey " << pnode->value << "\n";
+		}
+		build_height(pnode);
 	}
 	else {
-		add_recur(pNode->rnode, x);
+		rotate(pnode);
 	}
 	return;
 }
@@ -60,7 +67,6 @@ bool AVL::contains(int x)
 	return contains_recur(root, x);
 }
 
-
 void AVL::clear_recur(Node * pNode)
 {
 	if (pNode->lnode)
@@ -73,8 +79,8 @@ void AVL::clear_recur(Node * pNode)
 void AVL::clear()
 {
 	clear_recur(root);
+	root = nullptr;
 }
-
 
 void AVL::display_recur(Node * pNode)
 {
@@ -96,9 +102,111 @@ void AVL::display_LNR()
 	}
 }
 
+void AVL::traversal(Node* pnode) {
+	if (pnode->lnode) {
+		cout << pnode->value << " " << pnode->lnode->value << "\n";
+		traversal(pnode->lnode);
+	}
+	if (pnode->rnode) {
+		cout << pnode->value << " " << pnode->rnode->value << "\n";
+		traversal(pnode->rnode);
+	}
+}	
+
+void AVL::display_edge(){
+	traversal(root);
+}
+
 bool AVL::balance_factor(Node * pNode){
-	if (!pNode) return true;
-	int l = height(pNode->lnode);
-	int r = height(pNode->rnode);
-	return abs(l - r) <= 1;
+	assert(pNode != nullptr);
+	int l = 0, r = 0;
+	if (pNode->lnode != nullptr)
+		l = pNode->lnode->height;
+	if (pNode->rnode != nullptr)
+		r = pNode->rnode->height;
+	return (abs(l - r) <= 1);
+}
+
+void AVL::build_height(Node * pNode){
+	int l = 0, r = 0;
+	if (pNode->lnode != nullptr)
+		l = pNode->lnode->height;
+	if (pNode->rnode != nullptr)
+		r = pNode->rnode->height;
+	pNode->height = max(l, r) + 1;
+}
+
+void AVL::rotate_left(Node *& pnode){
+	assert(pnode->rnode != nullptr);
+	Node* pcur = pnode;
+	pnode = pcur->rnode;
+	pcur->rnode = pnode->lnode;
+	pnode->lnode = pcur;
+	build_height(pcur);
+	build_height(pnode);
+}
+
+void AVL::rotate_right(Node *& pnode) {
+	assert(pnode->lnode != nullptr);
+	Node* pcur = pnode;
+	pnode = pcur->lnode;
+	pcur->lnode = pnode->rnode;
+	pnode->rnode = pcur;
+	build_height(pcur);
+	build_height(pnode);
+}
+
+int AVL::case_determine(Node * pnode){
+	int l = 0, r = 0;
+	if(pnode->lnode)
+		l = pnode->lnode->height;
+	if(pnode->rnode)
+		r = pnode->rnode->height;
+	Node* pcur = nullptr;
+	if (l > r)
+		pcur = pnode->lnode;
+	else
+		pcur = pnode->rnode;
+	int ll = 0, rr = 0;
+	if (pcur->lnode)
+		ll = pcur->lnode->height;
+	if (pcur->rnode)
+		rr = pcur->rnode->height;
+	if (l > r) {
+		if (ll > rr)
+			return 1;
+		else
+			return 3;
+	}
+	else {
+		if (ll < rr)
+			return 0;
+		else
+			return 2;
+	}
+	return 0;
+}
+
+void AVL::rotate(Node *& pnode){
+	int t = case_determine(pnode);
+	cerr << t << "\n";
+	switch (t) {
+		case 0:
+			rotate_left(pnode);
+			break;
+		case 1:
+			rotate_right(pnode);
+			break;
+		case 2:
+			rotate_right(pnode->rnode);
+			rotate_left(pnode);
+			break;
+		case 3:
+			rotate_left(pnode->lnode);
+			rotate_right(pnode);
+			break;
+		default:
+			cerr << "This is not good!\n";
+			assert(true);
+	}
 }
