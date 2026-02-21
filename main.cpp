@@ -17,6 +17,8 @@ int main() {
 	tree.add(6);
 	tree.add(2);
 	tree.add(18);
+	tree.remove(15);
+	tree.remove(13);
 	tree.display_edge();
 	return 0;
 }

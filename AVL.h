@@ -17,18 +17,22 @@ struct AVL {
 	AVL();
 
 	void add_recur(Node *&pnode, int x);
+	void remove_recur(Node *& pnode, int x);
 	bool contains_recur(Node* pNode, int x);
 	void display_recur(Node* pNode);
 	void clear_recur(Node* pNode);
 	void traversal(Node* pnode);
+	void update_remove(Node*& pnode, Node* plast);
 
 	int get_height(Node *pNode);
 	void add(int x);
+	void remove(int x); void remove__(Node *& pnode);
 	bool contains(int x);
 	void clear();
 	void display_LNR();
 	void display_edge();
 
+	void update(Node*& pnode); // Check balance factor -> choose to only change height OR change height and rotate
 	bool balance_factor(Node* pNode);
 	void build_height(Node* pNode);
 	void rotate_left(Node*& pnode);

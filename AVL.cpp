@@ -2,6 +2,7 @@
 #include <iostream>
 #include <algorithm>
 #include <cassert>
+#include <stack>
 
 using namespace std;
 
@@ -35,22 +36,77 @@ void AVL::add_recur(Node *&pnode, int x)
 		add_recur(pnode->lnode, x);
 	else
 		add_recur(pnode->rnode, x);
-	if (balance_factor(pnode)) {
-		if (x == 3) {
-			cerr << "Hey " << pnode->value << "\n";
-		}
-		build_height(pnode);
-	}
-	else {
-		rotate(pnode);
-	}
+	update(pnode);
 	return;
 }
 
 void AVL::add(int x)
 {
 	add_recur(root, x);
-	return;
+}
+
+void AVL::update_remove(Node *& pnode, Node * plast) {
+	if (pnode != plast) {
+		update_remove(pnode->rnode, plast);
+	}
+	update(pnode);
+}
+
+void AVL::remove__(Node *& pnode) {
+	if (!pnode->lnode && !pnode->rnode) {  // Leaf node
+		delete pnode;
+		pnode = nullptr;
+	}
+	else if (!pnode->rnode) {			   // Only has left branch
+		Node * pdel = pnode;
+		pnode = pnode->lnode;
+		delete pdel;
+	}
+	else if (!pnode->lnode) {			   // Only has right branch
+		Node * pdel = pnode;
+		pnode = pnode->rnode;
+		delete pdel;
+	}
+	else {								   // Has both left and right branch
+		Node * pcur = pnode->lnode;
+		Node * ppre = pnode;
+		while (pcur->rnode) {
+			ppre = pcur;
+			pcur = pcur->rnode;
+		}
+		if (pnode != ppre) {
+			pnode->value = pcur->value;
+			ppre->rnode = pcur->lnode;
+			delete pcur;
+			// Update height - balance factor (rotate)
+			update_remove(pnode->lnode, ppre);
+			update(pnode);
+		}
+		else {
+			pnode->value = pcur->value;
+			pnode->lnode = pcur->lnode;
+			delete pcur;
+			// Update height - balance factor (rotate)
+			update(pnode);
+		}
+	}
+}
+
+void AVL::remove_recur(Node *& pnode, int x) {
+	if (!pnode) return;
+	if (pnode->value == x) {
+		remove__(pnode);
+		return;
+	}
+	if (x < pnode->value)
+		remove_recur(pnode->lnode, x);
+	else
+		remove_recur(pnode->rnode, x);
+	
+}
+
+void AVL::remove(int x) {
+	remove_recur(root, x);
 }
 
 bool AVL::contains_recur(Node * pNode, int x)
@@ -115,6 +171,15 @@ void AVL::traversal(Node* pnode) {
 
 void AVL::display_edge(){
 	traversal(root);
+}
+
+void AVL::update(Node *& pnode) {
+	if (balance_factor(pnode)) {
+		build_height(pnode);
+	}
+	else {
+		rotate(pnode);
+	}
 }
 
 bool AVL::balance_factor(Node * pNode){
@@ -189,7 +254,6 @@ int AVL::case_determine(Node * pnode){
 
 void AVL::rotate(Node *& pnode){
 	int t = case_determine(pnode);
-	cerr << t << "\n";
 	switch (t) {
 		case 0:
 			rotate_left(pnode);
