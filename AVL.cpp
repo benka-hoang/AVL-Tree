@@ -102,7 +102,7 @@ void AVL::remove_recur(Node *& pnode, int x) {
 		remove_recur(pnode->lnode, x);
 	else
 		remove_recur(pnode->rnode, x);
-	
+	update(pnode);
 }
 
 void AVL::remove(int x) {

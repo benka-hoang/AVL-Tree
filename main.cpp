@@ -19,6 +19,10 @@ int main() {
 	tree.add(18);
 	tree.remove(15);
 	tree.remove(13);
+	tree.remove(2);
+	tree.remove(6);
+	tree.remove(18);
 	tree.display_edge();
+	cout << tree.root->height << "\n";
 	return 0;
 }
